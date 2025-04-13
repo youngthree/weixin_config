@@ -7,7 +7,7 @@ from flask import Flask, request, abort, Response
 from wechatpy import parse_message, create_reply
 from wechatpy.crypto import WeChatCrypto
 from wechatpy.exceptions import InvalidSignatureException, InvalidAppIdException
-import openai
+from openai import AzureOpenAI
 import pymysql
 import requests
 import threading
@@ -27,12 +27,17 @@ WECHAT_AES_KEY = os.getenv("WECHAT_ENCODING_AES_KEY", "5Q23GoLfUradvWbxWoaNEXJ3O
 WECHAT_APPID = os.getenv("WECHAT_APP_ID", "ww26ba103d4950e0cb")
 WECHAT_CORPSECRET = os.getenv("WECHAT_CORPSECRET", "zUShp6BmRYb8O8o9INoTP0R2141RRh2Jdky5Q2R56A0")
 
-# Azure OpenAI 配置（请根据实际情况修改）
-openai.api_type = "azure"
-openai.api_base = os.getenv("AZURE_ENDPOINT_GPT4", "https://edgenesis-openai-sc-01.openai.azure.com/")
-openai.api_version = os.getenv("AZURE_API_VERSION_GPT4", "2024-08-01-preview")
-openai.api_key = os.getenv("AZURE_API_KEY_GPT4", "de7dd2fbb8404f08ad04ac22d515df87")
+# Azure OpenAI 配置（新版 SDK）
+AZURE_API_KEY = os.getenv("AZURE_API_KEY_GPT4", "de7dd2fbb8404f08ad04ac22d515df87")
+AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT_GPT4", "https://edgenesis-openai-sc-01.openai.azure.com/")
+AZURE_API_VERSION = os.getenv("AZURE_API_VERSION_GPT4", "2024-08-01-preview")
 AZURE_OPENAI_ENGINE = os.getenv("AZURE_DEPLOYMENT_GPT4", "gpt-4o")
+
+client = AzureOpenAI(
+    api_key=AZURE_API_KEY,
+    api_version=AZURE_API_VERSION,
+    azure_endpoint=AZURE_ENDPOINT
+)
 
 # 数据库配置（请根据实际情况修改）
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -208,15 +213,14 @@ def process_message(decrypted_xml):
     logging.debug(prompt_messages)
 
     try:
-        response = openai.ChatCompletion.create(
-            engine=AZURE_OPENAI_ENGINE,
+        response = client.chat.completions.create(
+            model=AZURE_OPENAI_ENGINE,
             messages=prompt_messages,
             max_tokens=150,
             temperature=0.7
         )
-        gpt_reply = response.choices[0].message["content"].strip()
+        gpt_reply = response.choices[0].message.content.strip()
         logging.debug(f"Azure OpenAI 返回: {gpt_reply}")
-        # 后处理：去掉返回回复中首行的类别前缀
         reply_content = gpt_reply
         if reply_content.startswith("【") and "\n" in reply_content:
             reply_content = reply_content.split("\n", 1)[1].strip()
