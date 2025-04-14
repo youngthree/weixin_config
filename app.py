@@ -31,7 +31,7 @@ WECHAT_CORPSECRET = os.getenv("WECHAT_CORPSECRET", "zUShp6BmRYb8O8o9INoTP0R2141R
 AZURE_API_KEY = os.getenv("AZURE_API_KEY_GPT4", "de7dd2fbb8404f08ad04ac22d515df87")
 AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT_GPT4", "https://edgenesis-openai-sc-01.openai.azure.com/")
 AZURE_API_VERSION = os.getenv("AZURE_API_VERSION_GPT4", "2024-08-01-preview")
-AZURE_OPENAI_ENGINE = os.getenv("AZURE_DEPLOYMENT_GPT4", "o3mini-gpt4")
+AZURE_OPENAI_ENGINE = os.getenv("AZURE_DEPLOYMENT_GPT4", "gpt-4")
 
 
 client = AzureOpenAI(
@@ -246,7 +246,7 @@ def process_message(decrypted_xml):
             
             "## 格式规范\n"
             "生成的回复必须严格符合如下格式：\n"
-            "{emoji} {响应模板} {基于知识库的智能生成回复}\n\n"
+            "{emoji} {响应模板} {智能生成回复}\n\n"
             "对于电池到货、退换货等问题，AI 会根据常见问题FAQ生成详细答案。"
         )
     },
